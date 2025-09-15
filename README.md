@@ -1,5 +1,5 @@
 # Everywhere-Anytime-Ready-for-Loading-BOT
-- E.A.R.L. Bot will be a personal autonomous assistant ready to help you carry your items. E.A.R.L. Bot will be able to follow you around using tracking modules and sensors.
+- E.A.R.L. Bot will be a personal autonomous assistant ready to help you carry your items. E.A.R.L. Bot will be able to follow you around using tracking modules and sensors, helping students carry things around campus!
 
 ##Team Members & Roles
 - Michelle Lee
