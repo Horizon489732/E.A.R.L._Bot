@@ -1,13 +1,13 @@
 # Everywhere-Anytime-Ready-for-Loading-BOT
 - E.A.R.L. Bot will be a personal autonomous assistant ready to help you carry your items. E.A.R.L. Bot will be able to follow you around using tracking modules and sensors, helping students carry things around campus!
 
-##Team Members & Roles
+## Team Members & Roles
 - Michelle Lee
 - Daniel Jaffe
 - Hien Tran
 - Chris Nucci
 
-##Technologies
+## Technologies
 - Microcontroller: An Arduino board will serve as the main processing unit, handling sensor data,
 motor control, and communication with the tracking system.
 - User Tracking: The robot will use RFID, Bluetooth Low Energy (BLE) beacons, or UltraWideband (UWB) technology to detect and follow a card or tag carried by the user. These technologies
