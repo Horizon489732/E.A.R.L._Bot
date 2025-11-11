@@ -99,7 +99,7 @@ void turnRight(int spd) {
   analogWrite(ENAleftsidebottom, spd);
   analogWrite(ENArightsidetop, spd);
   analogWrite(ENBleftsidetop, spd );
-  analogWrite(ENBrightsidebottom, spd/);
+  analogWrite(ENBrightsidebottom, spd);
 
   //LEFT forward
   digitalWrite(motor1pin1, HIGH);
@@ -132,7 +132,7 @@ void setup() {
   pinMode(ENBrightsidebottom, OUTPUT);
 
   Serial.begin(9600);
-  stopMotors();
+
   Serial.println("Motors ready!");
 }
 
@@ -141,12 +141,5 @@ void setup() {
 // =====================
 void loop() {
   Serial.println("Moving forward...");
-  forward(speed);
-  delay(2000);
   turnLeft(speed);
-  delay(2000);
-  forward(speed);
-  delay(2000);
-  turnRight(speed);
-  delay(2000);
 }
