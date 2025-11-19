@@ -44,42 +44,52 @@ void stopMotors() {
 // Movement functions (control all 4 motors)
 // =====================
 void forward(int spd) {
+
+  //full speed
   analogWrite(ENAleftsidebottom, spd);
   analogWrite(ENBleftsidetop, spd);
   analogWrite(ENArightsidetop, spd);
   analogWrite(ENBrightsidebottom, spd);
-
+  //Left side foward
   digitalWrite(motor1pin1, HIGH);
   digitalWrite(motor1pin2, LOW);
   digitalWrite(motor2pin1, HIGH);
   digitalWrite(motor2pin2, LOW);
+  //Right side foward
   digitalWrite(motor3pin1, HIGH);
   digitalWrite(motor3pin2, LOW);
   digitalWrite(motor4pin1, HIGH);
   digitalWrite(motor4pin2, LOW);
+
 }
 
 void backward(int spd) {
+
+  //full speed
   analogWrite(ENAleftsidebottom, spd);
   analogWrite(ENBleftsidetop, spd);
   analogWrite(ENArightsidetop, spd);
   analogWrite(ENBrightsidebottom, spd);
 
+  //left side backward
   digitalWrite(motor1pin1, LOW);
   digitalWrite(motor1pin2, HIGH);
   digitalWrite(motor2pin1, LOW);
   digitalWrite(motor2pin2, HIGH);
+  // right side backward
   digitalWrite(motor3pin1, LOW);
   digitalWrite(motor3pin2, HIGH);
   digitalWrite(motor4pin1, LOW);
   digitalWrite(motor4pin2, HIGH);
-}
 
-void turnLeft(int spd) {
-  // Left side slower
+}
+// turns left 90 degrees
+void fullTurnLeft(int spd) {
+
+  //Full speed for all sides
   analogWrite(ENAleftsidebottom, spd);
-  analogWrite(ENArightsidetop, spd);
   analogWrite(ENBleftsidetop, spd);
+  analogWrite(ENArightsidetop, spd);
   analogWrite(ENBrightsidebottom, spd);
 
   //LEFT backward
@@ -87,15 +97,20 @@ void turnLeft(int spd) {
   digitalWrite(motor1pin2, HIGH);
   digitalWrite(motor2pin1, LOW);
   digitalWrite(motor2pin2, HIGH);
-  //Right forward
+  //Right foward
   digitalWrite(motor3pin1, HIGH);
   digitalWrite(motor3pin2, LOW);
   digitalWrite(motor4pin1, HIGH);
   digitalWrite(motor4pin2, LOW);
+  delay(4000);
+
+
 }
 
-void turnRight(int spd) {
-  // Right side slower
+// turns Right 90 degrees
+void fullTurnRight(int spd) {
+
+  //Full speed for all sides
   analogWrite(ENAleftsidebottom, spd);
   analogWrite(ENArightsidetop, spd);
   analogWrite(ENBleftsidetop, spd );
@@ -111,6 +126,41 @@ void turnRight(int spd) {
   digitalWrite(motor3pin2, HIGH);
   digitalWrite(motor4pin1, LOW);
   digitalWrite(motor4pin2, HIGH);
+
+}
+// turns left and moves foward
+void moveAndTurnLeft(int spd) {
+  analogWrite(ENAleftsidebottom, spd/2);
+  analogWrite(ENBleftsidetop, spd/2);
+  analogWrite(ENArightsidetop, spd);
+  analogWrite(ENBrightsidebottom, spd);
+  //Left side foward
+  digitalWrite(motor1pin1, HIGH);
+  digitalWrite(motor1pin2, LOW);
+  digitalWrite(motor2pin1, HIGH);
+  digitalWrite(motor2pin2, LOW);
+  //Right side foward
+  digitalWrite(motor3pin1, HIGH);
+  digitalWrite(motor3pin2, LOW);
+  digitalWrite(motor4pin1, HIGH);
+  digitalWrite(motor4pin2, LOW);
+}
+//turns right and moves foward
+void moveAndTurnRight(int spd) {
+  analogWrite(ENAleftsidebottom, spd);
+  analogWrite(ENBleftsidetop, spd);
+  analogWrite(ENArightsidetop, spd/2);
+  analogWrite(ENBrightsidebottom, spd/2);
+  //Left side foward
+  digitalWrite(motor1pin1, HIGH);
+  digitalWrite(motor1pin2, LOW);
+  digitalWrite(motor2pin1, HIGH);
+  digitalWrite(motor2pin2, LOW);
+  //Right side foward
+  digitalWrite(motor3pin1, HIGH);
+  digitalWrite(motor3pin2, LOW);
+  digitalWrite(motor4pin1, HIGH);
+  digitalWrite(motor4pin2, LOW);
 }
 
 // =====================
@@ -132,7 +182,7 @@ void setup() {
   pinMode(ENBrightsidebottom, OUTPUT);
 
   Serial.begin(9600);
-
+  stopMotors();
   Serial.println("Motors ready!");
 }
 
@@ -141,5 +191,8 @@ void setup() {
 // =====================
 void loop() {
   Serial.println("Moving forward...");
-  turnLeft(speed);
-}
+  fullTurnLeft(speed);
+  delay(10000);
+  stopMotors();
+  delay(10000);
+  }
