@@ -211,7 +211,4 @@ void setup() {
 void loop() {
   Serial.println("Moving forward...");
   forward(speed);
-  delay(3000);
-  fullTurnLeft(speed);
-  delay(3000);
   }
