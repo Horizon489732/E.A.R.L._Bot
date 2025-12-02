@@ -1,0 +1,58 @@
+#include "StellaUWB.h"
+
+// Set this anchor's MAC address
+// uint8_t anchorAddr[] = {0x22, 0x22};
+uint8_t anchorAddr[] = {0x33, 0x33};
+// uint8_t anchorAddr[] = {0x44, 0x44};
+uint8_t tagAddr[]    = {0x11, 0x11};  // Tag/controller MAC address
+
+// Callback for when this anchor receives a ranging measurement
+void rangingHandler(UWBRangingData &rangingData) {
+    if (rangingData.measureType() != (uint8_t)uwb::MeasurementType::TWO_WAY) return;
+
+    RangingMeasures twr = rangingData.twoWayRangingMeasure();
+    for (int i = 0; i < rangingData.available(); i++) {
+        if (twr[i].status == 0 && twr[i].distance != 0xFFFF) {
+            Serial.print("Measured distance to tag: ");
+            Serial.print(twr[i].distance);
+            Serial.println(" mm");
+        }
+    }
+}
+
+void setup() {
+    Serial.begin(115200);
+    delay(1000);
+
+    // Define this anchor's MAC address
+    UWBMacAddress anchorMAC(UWBMacAddress::Size::SHORT, anchorAddr);
+
+    // Define the tag MAC address (controller)
+    UWBMacAddress tagMAC(UWBMacAddress::Size::SHORT, tagAddr);
+
+    // Register the ranging callback
+    UWB.registerRangingCallback(rangingHandler);
+
+    // Initialize UWB
+    UWB.begin();
+    while (UWB.state() != 0) delay(10);
+
+    Serial.println("Starting anchor responder session...");
+
+    // Create the responder session for this anchor
+    MulticastResponder anchorSession(0x11223344, anchorMAC, tagMAC);
+
+    // Add session to session manager
+    UWBSessionManager.addSession(anchorSession);
+
+    // Initialize and start the responder session
+    anchorSession.init();
+    anchorSession.start();
+
+    Serial.println("Anchor ready. Waiting for tag ranging...");
+}
+
+void loop() {
+    // Anchors just respond; all measurements are printed via callback
+    delay(100);
+}
