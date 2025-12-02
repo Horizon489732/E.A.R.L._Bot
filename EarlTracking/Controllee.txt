@@ -1,5 +1,5 @@
 /**
-  Two-Way Ranging Controller Example for Arduino Stella
+  Two-Way Ranging Controllee Example for Arduino Stella
   Name: stella_uwb_twr_controllee.ino
   Purpose: This sketch configures the Arduino Stella as a Controllee (Responder)
   for Two-Way Ranging with a Portenta UWB Shield configured as Controllee.
