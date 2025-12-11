@@ -5,7 +5,6 @@
 #include <BLEAddress.h>
 #include <BLEAdvertisedDevice.h>
 
-// UUIDs matching your Arduino sender
 #define SERVICE_UUID        "180C"
 #define CHARACTERISTIC_UUID "2A56"
 
@@ -23,16 +22,31 @@ void notifyCallback(
   size_t length,
   bool isNotify
 ) {
-    Serial.print("Received: ");
-    for(int i = 0; i < length; i++) {
-        Serial.print((char)pData[i]);
+    Serial.print("Data received (");
+    Serial.print(length);
+    Serial.print(" bytes): ");
+    
+    if (length == 3) {  // Our packet format: [anchorID, distanceLow, distanceHigh]
+        uint8_t anchorID = pData[0];
+        uint16_t distance = pData[1] | (pData[2] << 8);
+        
+        Serial.print("Anchor ");
+        Serial.print(anchorID);
+        Serial.print(" - Distance: ");
+        Serial.print(distance);
+        Serial.println(" mm");
+    } else {
+        Serial.print("Unexpected format - Raw bytes: ");
+        for (int i = 0; i < length; i++) {
+            Serial.print(pData[i], HEX);
+            Serial.print(" ");
+        }
+        Serial.println();
     }
-    Serial.println();
 }
 
 class MyAdvertisedDeviceCallbacks: public BLEAdvertisedDeviceCallbacks {
     void onResult(BLEAdvertisedDevice advertisedDevice) {
-        // Look for device with name "BLE_SENDER"
         if (advertisedDevice.haveName() && advertisedDevice.getName() == "BLE_SENDER") {
             Serial.print("Found BLE_SENDER: ");
             Serial.println(advertisedDevice.toString().c_str());
@@ -45,13 +59,14 @@ class MyAdvertisedDeviceCallbacks: public BLEAdvertisedDeviceCallbacks {
 
 void setup() {
     Serial.begin(115200);
-    Serial.println("ESP32 BLE Central starting...");
+    Serial.println("ESP32 BLE Receiver starting...");
+    Serial.println("Waiting for distance data from 3 anchors...");
     
     BLEDevice::init("");
     BLEScan* pBLEScan = BLEDevice::getScan();
     pBLEScan->setAdvertisedDeviceCallbacks(new MyAdvertisedDeviceCallbacks());
     pBLEScan->setActiveScan(true);
-    pBLEScan->start(10, false); // scan for 10 seconds
+    pBLEScan->start(10, false);
 }
 
 bool connectToTag() {
@@ -81,7 +96,7 @@ bool connectToTag() {
     
     if(pRemoteCharacteristic->canNotify()) {
         pRemoteCharacteristic->registerForNotify(notifyCallback);
-        Serial.println("Registered for notifications");
+        Serial.println("Registered for notifications - waiting for distance data...");
     }
     
     connected = true;
@@ -96,7 +111,6 @@ void loop() {
         }
     }
     
-    // If disconnected, restart scan
     if (connected && !pClient->isConnected()) {
         Serial.println("Disconnected! Restarting scan...");
         connected = false;
