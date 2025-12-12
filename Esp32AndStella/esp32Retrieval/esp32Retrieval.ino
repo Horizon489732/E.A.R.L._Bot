@@ -35,6 +35,13 @@ void notifyCallback(
         Serial.print(" - Distance: ");
         Serial.print(distance);
         Serial.println(" mm");
+
+                // Send to Arduino
+        Serial2.print("Anchor ");
+        Serial2.print(anchorID);
+        Serial2.print(" - Distance: ");
+        Serial2.print(distance);
+        Serial2.println(" mm");
     } else {
         Serial.print("Unexpected format - Raw bytes: ");
         for (int i = 0; i < length; i++) {
@@ -67,6 +74,8 @@ void setup() {
     pBLEScan->setAdvertisedDeviceCallbacks(new MyAdvertisedDeviceCallbacks());
     pBLEScan->setActiveScan(true);
     pBLEScan->start(10, false);
+
+    Serial2.begin(9600, SERIAL_8N1, 3, 1);
 }
 
 bool connectToTag() {
