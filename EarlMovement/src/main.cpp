@@ -179,6 +179,7 @@ void moveAndTurnRight(int spd) {
   digitalWrite(LB_IN2, LOW);
 }
 
+
 void setup() {
   // Right Front Motor
   pinMode(RF_IN1, OUTPUT);
@@ -211,4 +212,12 @@ void setup() {
 void loop() {
   Serial.println("Moving forward...");
   forward(speed);
+  delay(1000);
+  // stopMotors();
+  // delay(500);
+  fullTurnRight(speed);
+  delay(5000);
+  // fullTurnRight(speed);
+
+
   }
