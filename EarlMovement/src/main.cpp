@@ -33,6 +33,7 @@ int LB_ENA = 8;
 
 // Default speed (0–255)
 int speed = 255;
+int turnOffset = 30;   // try 20–40 for gentle turns
 
 // ===================== Helper: Stop all motors =====================
 void stopMotors() {
@@ -206,18 +207,72 @@ void setup() {
   Serial.println("Motors ready!");
 }
 
+void moveAndTurnLeft2(int spd) {
+  int leftSpeed = spd - turnOffset;
+  if (leftSpeed < 0) leftSpeed = 0;
+
+  analogWrite(RF_ENA, spd);
+  analogWrite(RB_ENA, spd);
+
+  analogWrite(LF_ENA, leftSpeed);
+  analogWrite(LB_ENA, leftSpeed);
+
+  // Forward both sides
+  digitalWrite(RF_IN1, HIGH);
+  digitalWrite(RF_IN2, LOW);
+  digitalWrite(RB_IN3, HIGH);
+  digitalWrite(RB_IN4, LOW);
+
+  digitalWrite(LF_IN3, HIGH);
+  digitalWrite(LF_IN4, LOW);
+  digitalWrite(LB_IN1, HIGH);
+  digitalWrite(LB_IN2, LOW);
+}
+
+void moveAndTurnRight2(int spd) {
+  int rightSpeed = spd - turnOffset;
+  if (rightSpeed < 0) rightSpeed = 0;
+
+  analogWrite(LF_ENA, spd);
+  analogWrite(LB_ENA, spd);
+
+  analogWrite(RF_ENA, rightSpeed);
+  analogWrite(RB_ENA, rightSpeed);
+
+  // Forward both sides
+  digitalWrite(RF_IN1, HIGH);
+  digitalWrite(RF_IN2, LOW);
+  digitalWrite(RB_IN3, HIGH);
+  digitalWrite(RB_IN4, LOW);
+
+  digitalWrite(LF_IN3, HIGH);
+  digitalWrite(LF_IN4, LOW);
+  digitalWrite(LB_IN1, HIGH);
+  digitalWrite(LB_IN2, LOW);
+}
+
+
+
 // =====================
 // Loop example
 // =====================
 void loop() {
   Serial.println("Moving forward...");
-  forward(speed);
-  delay(1000);
-  // stopMotors();
+  // forward(speed);
   // delay(500);
-  fullTurnRight(speed);
-  delay(5000);
+  // forward(speed);
+  // stopMotors();
+  // delay(3000);
+  // backward(speed);
+  // delay(3000);
+  // delay(500);
   // fullTurnRight(speed);
-
-
-  }
+  // delay(5000);
+  // fullTurnRight(speed);
+  moveAndTurnLeft2(speed);
+  delay(4000);
+  // moveAndTurnLeft(speed);
+  // backward(speed); 
+  moveAndTurnRight2(speed);
+  delay(4000);
+     }
