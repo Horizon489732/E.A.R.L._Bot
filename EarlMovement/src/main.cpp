@@ -35,6 +35,12 @@ int LB_ENA = 8;
 int speed = 255;
 int turnOffset = 30;   // try 20–40 for gentle turns
 
+
+// for distance reading
+String incoming = "";
+
+
+
 // ===================== Helper: Stop all motors =====================
 void stopMotors() {
   analogWrite(RF_ENA, 0);
@@ -257,7 +263,7 @@ void moveAndTurnRight2(int spd) {
 // Loop example
 // =====================
 void loop() {
-  Serial.println("Moving forward...");
+  // Serial.println("Moving forward...");
   // forward(speed);
   // delay(500);
   // forward(speed);
@@ -269,10 +275,21 @@ void loop() {
   // fullTurnRight(speed);
   // delay(5000);
   // fullTurnRight(speed);
-  moveAndTurnLeft2(speed);
-  delay(4000);
+  // moveAndTurnLeft2(speed);
+  // delay(4000);
   // moveAndTurnLeft(speed);
   // backward(speed); 
-  moveAndTurnRight2(speed);
-  delay(4000);
+  // moveAndTurnRight2(speed);
+  // delay(4000);
+    while (Serial.available()) {
+    char c = Serial.read();
+
+    if (c == '\n') {
+      Serial.print("Received from ESP32: ");
+      Serial.println(incoming);
+      incoming = "";
+    } else {
+      incoming += c;
+    }
+  }
      }

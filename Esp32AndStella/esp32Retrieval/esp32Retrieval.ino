@@ -78,9 +78,15 @@ void setup() {
     Serial2.begin(9600, SERIAL_8N1, 3, 1);
 }
 
+/*************  ✨ Windsurf Command 🌟  *************/
+/**
+ * Connect to the BLE_SENDER device and register for notifications.
+ * @return True if connection and notification registration succeed, false otherwise.
+ */
 bool connectToTag() {
     if (tagAddress == nullptr) return false;
     
+    // Create a BLE client and connect to the device
     pClient = BLEDevice::createClient();
     Serial.println("Connecting to BLE_SENDER...");
     if (!pClient->connect(*tagAddress)) {
@@ -89,6 +95,7 @@ bool connectToTag() {
     }
     Serial.println("Connected to BLE_SENDER.");
     
+    // Retrieve the BLE service with the given UUID
     BLERemoteService* pRemoteService = pClient->getService(BLEUUID(SERVICE_UUID));
     if (pRemoteService == nullptr) {
         Serial.println("Failed to find service.");
@@ -111,6 +118,7 @@ bool connectToTag() {
     connected = true;
     return true;
 }
+/*******  2b0db26a-509e-4b14-aefc-945c4575baa0  *******/
 
 void loop() {
     if (!connected && doConnect) {
