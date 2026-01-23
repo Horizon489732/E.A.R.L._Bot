@@ -31,6 +31,14 @@ int speed = 80;
 // for distance reading
 String incoming = "";
 
+// Define a struct to hold anchor distances
+struct AnchorDistances {
+  int anchor1 = 0;
+  int anchor2 = 0;
+  int anchor3 = 0;
+};
+
+AnchorDistances dist;
 
 // ===================== STOP ALL MOTORS =====================
 void stopMotors() {
@@ -179,6 +187,41 @@ void moveAndTurnRight(int spd) {
 }
 
 
+
+// ===================== SERIAL PARSING =====================
+void parseAnchorDistance(String line){
+
+
+  // Step 1: Find the anchor number 
+  int anchorID = 0;
+  int anchorPos = line.indexOf("Anchor ");
+  int dashPos   = line.indexOf(" -");
+  if (anchorPos != -1 && dashPos != -1) {
+      String idStr = line.substring(anchorPos + 7, dashPos);
+      anchorID = idStr.toInt(); // 1, 2, or 3
+  }
+
+  // Step 2: Find the Distance Value
+  int colonIndex = line.indexOf(": ");
+  int distance = 0;
+  if (colonIndex != -1) {
+      String distanceStr = line.substring(colonIndex + 2);
+      int spaceIndex = distanceStr.indexOf(" ");
+      if (spaceIndex != -1) {
+          distanceStr = distanceStr.substring(0, spaceIndex);
+      }
+      distance = distanceStr.toInt();
+  }
+
+  //Step 3: Assign to correct anchor variable
+  switch(anchorID) {
+      case 1: dist.anchor1 = distance; break;
+      case 2: dist.anchor2 = distance; break;
+      case 3: dist.anchor3 = distance; break;
+  }
+}
+
+
 void setup() {
   pinMode(RF_IN1, OUTPUT);
   pinMode(RF_IN2, OUTPUT);
@@ -205,10 +248,13 @@ void setup() {
 void loop() {
   while (Serial.available()) {
     char c = Serial.read();
-
     if (c == '\n') {
       Serial.print("Received from ESP32: ");
-      Serial.println(incoming);
+      parseAnchorDistance(incoming);
+      Serial.print("Anchor1: "); Serial.println(dist.anchor1);
+      Serial.print("Anchor2: "); Serial.println(dist.anchor2);
+      Serial.print("Anchor3: "); Serial.println(dist.anchor3);
+      calculateDirection();
       incoming = "";
     } else {
       incoming += c;

@@ -39,7 +39,14 @@ int turnOffset = 30;   // try 20–40 for gentle turns
 // for distance reading
 String incoming = "";
 
+// Define a struct to hold anchor distances
+struct AnchorDistances {
+  int anchor1 = 0;
+  int anchor2 = 0;
+  int anchor3 = 0;
+};
 
+AnchorDistances dist;
 
 // ===================== Helper: Stop all motors =====================
 void stopMotors() {
@@ -186,6 +193,115 @@ void moveAndTurnRight(int spd) {
   digitalWrite(LB_IN2, LOW);
 }
 
+void moveAndTurnLeft2(int spd) {
+  int leftSpeed = spd - turnOffset;
+  if (leftSpeed < 0) leftSpeed = 0;
+
+  analogWrite(RF_ENA, spd);
+  analogWrite(RB_ENA, spd);
+
+  analogWrite(LF_ENA, leftSpeed);
+  analogWrite(LB_ENA, leftSpeed);
+
+  // Forward both sides
+  digitalWrite(RF_IN1, HIGH);
+  digitalWrite(RF_IN2, LOW);
+  digitalWrite(RB_IN3, HIGH);
+  digitalWrite(RB_IN4, LOW);
+
+  digitalWrite(LF_IN3, HIGH);
+  digitalWrite(LF_IN4, LOW);
+  digitalWrite(LB_IN1, HIGH);
+  digitalWrite(LB_IN2, LOW);
+}
+
+
+void moveAndTurnRight2(int spd) {
+  int rightSpeed = spd - turnOffset;
+  if (rightSpeed < 0) rightSpeed = 0;
+
+  analogWrite(LF_ENA, spd);
+  analogWrite(LB_ENA, spd);
+
+  analogWrite(RF_ENA, rightSpeed);
+  analogWrite(RB_ENA, rightSpeed);
+
+  // Forward both sides
+  digitalWrite(RF_IN1, HIGH);
+  digitalWrite(RF_IN2, LOW);
+  digitalWrite(RB_IN3, HIGH);
+  digitalWrite(RB_IN4, LOW);
+
+  digitalWrite(LF_IN3, HIGH);
+  digitalWrite(LF_IN4, LOW);
+  digitalWrite(LB_IN1, HIGH);
+  digitalWrite(LB_IN2, LOW);
+}
+
+// ===================== SERIAL PARSING =====================
+void parseAnchorDistance(String line){
+
+
+  // Step 1: Find the anchor number 
+  int anchorID = 0;
+  int anchorPos = line.indexOf("Anchor ");
+  int dashPos   = line.indexOf(" -");
+  if (anchorPos != -1 && dashPos != -1) {
+      String idStr = line.substring(anchorPos + 7, dashPos);
+      anchorID = idStr.toInt(); // 1, 2, or 3
+  }
+
+  // Step 2: Find the Distance Value
+  int colonIndex = line.indexOf(": ");
+  int distance = 0;
+  if (colonIndex != -1) {
+      String distanceStr = line.substring(colonIndex + 2);
+      int spaceIndex = distanceStr.indexOf(" ");
+      if (spaceIndex != -1) {
+          distanceStr = distanceStr.substring(0, spaceIndex);
+      }
+      distance = distanceStr.toInt();
+  }
+
+  //Step 3: Assign to correct anchor variable
+  switch(anchorID) {
+      case 1: dist.anchor1 = distance; break;
+      case 2: dist.anchor2 = distance; break;
+      case 3: dist.anchor3 = distance; break;
+  }
+}
+
+void calculateDirection(){
+  if (dist.anchor1 < 100 || dist.anchor2 < 100) {
+    // stopping motor to little distance
+    Serial.println("Stopping Motors");
+    stopMotors();
+    delay(1000);
+    }
+  else {
+     if (abs(dist.anchor1 - dist.anchor2) < 20){
+    // Move Forward
+    Serial.println("Moving Forward");
+    forward(speed);
+    delay(500);
+    }
+    else {
+      if (dist.anchor1>dist.anchor2){
+        // Turn Right
+        Serial.println("Turning Right");
+        moveAndTurnRight2(speed);
+        delay(500);
+      }
+      else {
+        // Turn Left
+        Serial.println("Turning Left");
+        moveAndTurnLeft2(speed);
+        delay(500);
+      }
+    }
+  }
+ 
+}
 
 void setup() {
   // Right Front Motor
@@ -213,50 +329,6 @@ void setup() {
   Serial.println("Motors ready!");
 }
 
-void moveAndTurnLeft2(int spd) {
-  int leftSpeed = spd - turnOffset;
-  if (leftSpeed < 0) leftSpeed = 0;
-
-  analogWrite(RF_ENA, spd);
-  analogWrite(RB_ENA, spd);
-
-  analogWrite(LF_ENA, leftSpeed);
-  analogWrite(LB_ENA, leftSpeed);
-
-  // Forward both sides
-  digitalWrite(RF_IN1, HIGH);
-  digitalWrite(RF_IN2, LOW);
-  digitalWrite(RB_IN3, HIGH);
-  digitalWrite(RB_IN4, LOW);
-
-  digitalWrite(LF_IN3, HIGH);
-  digitalWrite(LF_IN4, LOW);
-  digitalWrite(LB_IN1, HIGH);
-  digitalWrite(LB_IN2, LOW);
-}
-
-void moveAndTurnRight2(int spd) {
-  int rightSpeed = spd - turnOffset;
-  if (rightSpeed < 0) rightSpeed = 0;
-
-  analogWrite(LF_ENA, spd);
-  analogWrite(LB_ENA, spd);
-
-  analogWrite(RF_ENA, rightSpeed);
-  analogWrite(RB_ENA, rightSpeed);
-
-  // Forward both sides
-  digitalWrite(RF_IN1, HIGH);
-  digitalWrite(RF_IN2, LOW);
-  digitalWrite(RB_IN3, HIGH);
-  digitalWrite(RB_IN4, LOW);
-
-  digitalWrite(LF_IN3, HIGH);
-  digitalWrite(LF_IN4, LOW);
-  digitalWrite(LB_IN1, HIGH);
-  digitalWrite(LB_IN2, LOW);
-}
-
 
 
 // =====================
@@ -281,15 +353,19 @@ void loop() {
   // backward(speed); 
   // moveAndTurnRight2(speed);
   // delay(4000);
-    while (Serial.available()) {
+  while (Serial.available()) {
     char c = Serial.read();
-
     if (c == '\n') {
       Serial.print("Received from ESP32: ");
-      Serial.println(incoming);
+      parseAnchorDistance(incoming);
+      Serial.print("Anchor1: "); Serial.println(dist.anchor1);
+      Serial.print("Anchor2: "); Serial.println(dist.anchor2);
+      Serial.print("Anchor3: "); Serial.println(dist.anchor3);
+      calculateDirection();
       incoming = "";
     } else {
       incoming += c;
     }
   }
-     }
+  
+}
