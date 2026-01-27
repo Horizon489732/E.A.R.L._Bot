@@ -272,35 +272,38 @@ void parseAnchorDistance(String line){
 }
 
 void calculateDirection(){
-  if (dist.anchor1 < 100 || dist.anchor2 < 100) {
-    // stopping motor to little distance
-    Serial.println("Stopping Motors");
-    stopMotors();
-    delay(4000);
-    }
-  else {
-     if (abs(dist.anchor1 - dist.anchor2) < 20){
-    // Move Forward
-    Serial.println("Moving Forward");
-    forward(speed);
-    delay(4000);
-    }
+  // distance of either 1 and 2 is greater than 10mm
+  // continue going
+  if ((dist.anchor1 >30) && (dist.anchor2>30)){
+      if (dist.anchor1 < 100 || dist.anchor2 < 100) {
+      // stopping motor to little distance
+      Serial.println("Stopping Motors");
+      stopMotors();
+      delay(500);
+      }
     else {
-      if (dist.anchor1>dist.anchor2){
-        // Turn Right
-        Serial.println("Turning Right");
-        moveAndTurnRight2(speed);
-        delay(4000);
+      if (abs(dist.anchor1 - dist.anchor2) < 20){
+      // Move Forward
+      Serial.println("Moving Forward");
+      forward(speed);
+      delay(500);
       }
       else {
-        // Turn Left
-        Serial.println("Turning Left");
-        moveAndTurnLeft2(speed);
-        delay(4000);
+        if (dist.anchor1>dist.anchor2){
+          // Turn Right
+          Serial.println("Turning Right");
+          moveAndTurnRight2(speed);
+      delay(500);
+        }
+        else {
+          // Turn Left
+          Serial.println("Turning Left");
+          moveAndTurnLeft2(speed);
+      delay(500);
+        }
       }
     }
   }
- 
 }
 
 void setup() {
