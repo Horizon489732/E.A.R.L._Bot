@@ -65,7 +65,7 @@ class MyAdvertisedDeviceCallbacks: public BLEAdvertisedDeviceCallbacks {
 };
 
 void setup() {
-    Serial.begin(115200);
+    Serial.begin(115000);
     Serial.println("ESP32 BLE Receiver starting...");
     Serial.println("Waiting for distance data from 3 anchors...");
     

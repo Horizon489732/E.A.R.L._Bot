@@ -276,27 +276,27 @@ void calculateDirection(){
     // stopping motor to little distance
     Serial.println("Stopping Motors");
     stopMotors();
-    delay(1000);
+    delay(4000);
     }
   else {
      if (abs(dist.anchor1 - dist.anchor2) < 20){
     // Move Forward
     Serial.println("Moving Forward");
     forward(speed);
-    delay(500);
+    delay(4000);
     }
     else {
       if (dist.anchor1>dist.anchor2){
         // Turn Right
         Serial.println("Turning Right");
         moveAndTurnRight2(speed);
-        delay(500);
+        delay(4000);
       }
       else {
         // Turn Left
         Serial.println("Turning Left");
         moveAndTurnLeft2(speed);
-        delay(500);
+        delay(4000);
       }
     }
   }
