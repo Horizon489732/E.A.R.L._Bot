@@ -272,6 +272,12 @@ void parseAnchorDistance(String line){
 }
 
 void calculateDirection(){
+  if (dist.anchor1 == -1|| dist.anchor1 == 65535 || dist.anchor2 == -1 || dist.anchor2 == 65535){
+    // checking if tag is disconnected
+    Serial.println("Stop Moving - check if tag is disconnected");
+    stopMotors();
+    return;
+  }
   // distance of either 1 and 2 is greater than 10mm
   // continue going
   if ((dist.anchor1 >30) && (dist.anchor2>30)){
@@ -323,7 +329,9 @@ void setup() {
   pinMode(LB_IN2, OUTPUT);
   pinMode(LB_ENA, OUTPUT);
 
-  Serial.begin(9600);
+  Serial.begin(115200);
+  Serial1.begin(9600);
+
   stopMotors();
   Serial.println("Motors ready!");
 }
@@ -334,37 +342,20 @@ void setup() {
 // Loop example
 // =====================
 void loop() {
-  // Serial.println("Moving forward...");
-  // forward(speed);
-  // delay(500);
-  // forward(speed);
-  // stopMotors();
-  // delay(3000);
-  // backward(speed);
-  // delay(3000);
-  // delay(500);
-  // fullTurnRight(speed);
-  // delay(5000);
-  // fullTurnRight(speed);
-  // moveAndTurnLeft2(speed);
-  // delay(4000);
-  // moveAndTurnLeft(speed);
-  // backward(speed); 
-  // moveAndTurnRight2(speed);
-  // delay(4000);
-  while (Serial.available()) {
-    char c = Serial.read();
-    if (c == '\n') {
-      Serial.print("Received from ESP32: ");
-      parseAnchorDistance(incoming);
-      Serial.print("Anchor1: "); Serial.println(dist.anchor1);
-      Serial.print("Anchor2: "); Serial.println(dist.anchor2);
-      Serial.print("Anchor3: "); Serial.println(dist.anchor3);
-      calculateDirection();
-      incoming = "";
-    } else {
-      incoming += c;
-    }
+  // Check if any data has arrived from the ESP32
+  if (Serial1.available()) {
+    // Read the line until the newline character '\n'
+    String incomingLine = Serial1.readStringUntil('\n');
+    
+    // Print the raw string exactly as it arrived
+    Serial.print("Received from ESP32: ");
+    Serial.println(incomingLine);
+    parseAnchorDistance(incomingLine);
+    Serial.print("Anchor1: "); Serial.println(dist.anchor1);
+    Serial.print("Anchor2: "); Serial.println(dist.anchor2);
+  //   Serial.print("Anchor3: "); Serial.println(dist.anchor3);
+    calculateDirection();
+
   }
-  
 }
+  

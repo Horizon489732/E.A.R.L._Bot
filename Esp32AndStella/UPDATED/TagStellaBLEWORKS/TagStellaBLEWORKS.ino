@@ -21,35 +21,62 @@ void rangingHandler(UWBRangingData &rangingData) { // callback that is called wh
     RangingMeasures twr = rangingData.twoWayRangingMeasure();
 
     bool updated = false;
+    //code that add logic to send a specific number if something is disconnect or not connect 
+    // it will either come up as 65535 or -1
+// Loop through our 3 expected slots
+    for (int i = 0; i < 3; i++) {
+        int16_t newDist;
 
-    for (int i = 0; i < rangingData.available(); i++) { // loops through each anchor's measurements
-        if (twr[i].status == 0 && twr[i].distance > 0) {
-            uint16_t distanceMm = twr[i].distance;
+        // Check: Is this anchor even in the current report AND is the signal good?
+        if (i < rangingData.available() && twr[i].status == 0 && twr[i].distance > 0) {
+            newDist = (int16_t)twr[i].distance;
+        } else {
+            // Anchor is missing, blocked, or status failed
+            newDist = -1;
+        }
 
-            // Only update if distance changed
-            if (distanceMm != distances[i]) {
-                distances[i] = distanceMm;
-                updated = true;
-
-                // Serial.print("UWB RX | Anchor ");
-                // Serial.print(i + 1);
-                // Serial.print(" Distance: ");
-                // Serial.print(distanceMm);
-                // Serial.println(" mm");
-
-
-                // // Store packet for BLE sending (first anchor only)
-                // pendingPacket[0] = i + 1;               // Anchor number
-                // pendingPacket[1] = distanceMm & 0xFF;  // low byte
-                // pendingPacket[2] = (distanceMm >> 8) & 0xFF; // high byte
-                if (updated){
-                  newDistanceAvailable = true; // mark ready to send
-                }
-         
-            }
+        // Only flag a change if the value actually flipped (e.g., from 1200 to -1)
+        if (newDist != distances[i]) {
+            distances[i] = newDist;
+            updated = true;
         }
     }
+
+    if (updated) {
+        newDistanceAvailable = true; // Tell the loop it's time to send BLE data
+    }
 }
+
+//     for (int i = 0; i < rangingData.available(); i++) { // loops through each anchor's measurements
+//         if (twr[i].status == 0 && twr[i].distance > 0) {
+//             uint16_t distanceMm = twr[i].distance;
+
+//             // Only update if distance changed
+//             if (distanceMm != distances[i]) {
+//                 Serial.println("Change made");
+//                 distances[i] = distanceMm;
+//                 updated = true;
+
+//                 // Serial.print("UWB RX | Anchor ");
+//                 // Serial.print(i + 1);
+//                 // Serial.print(" Distance: ");
+//                 // Serial.print(distanceMm);
+//                 // Serial.println(" mm");
+
+
+//                 // // Store packet for BLE sending (first anchor only)
+//                 // pendingPacket[0] = i + 1;               // Anchor number
+//                 // pendingPacket[1] = distanceMm & 0xFF;  // low byte
+//                 // pendingPacket[2] = (distanceMm >> 8) & 0xFF; // high byte
+//                 if (updated){
+//                   newDistanceAvailable = true; // mark ready to send
+//                 }
+        
+//             }
+           
+//         }
+//     }
+// }
 
 
 void setup() {

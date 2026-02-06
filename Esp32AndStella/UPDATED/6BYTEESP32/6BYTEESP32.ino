@@ -21,17 +21,28 @@ class MyClientCallback : public BLEClientCallbacks {
 };
 
 // ===== Notification Handler =====
-void notifyCallback(BLERemoteCharacteristic* pChar, uint8_t* pData, size_t length, bool isNotify) {
-    if (length !=6) return;
+void notifyCallback(BLERemoteCharacteristic* pChar,
+                    uint8_t* pData,
+                    size_t length,
+                    bool isNotify) {
+
+    if (length != 6) return;
 
     uint16_t a1 = pData[0] | (pData[1] << 8);
     uint16_t a2 = pData[2] | (pData[3] << 8);
     uint16_t a3 = pData[4] | (pData[5] << 8);
-   
-    Serial.printf("A1=%d mm, A2=%d mm, A3=%d mm\n", a1, a2, a3);
-    Serial2.printf("A1=%d mm, A2=%d mm, A3=%d mm\n", a1, a2, a3);
-    
+
+    // ----- DEBUG (USB Serial) -----
+    Serial.printf("Anchor 1 - Distance: %d mm\n", a1);
+    Serial.printf("Anchor 2 - Distance: %d mm\n", a2);
+    // Serial.printf("Anchor 3 - Distance: %d mm\n", a3);
+
+    // ----- SEND TO MOTOR ARDUINO -----
+    Serial2.printf("Anchor 1 - Distance: %d mm\n", a1);
+    Serial2.printf("Anchor 2 - Distance: %d mm\n", a2);
+    // Serial2.printf("Anchor 3 - Distance: %d mm\n", a3);
 }
+
 
 // ===== Scan Callback =====
 class MyAdvertisedDeviceCallbacks: public BLEAdvertisedDeviceCallbacks {
