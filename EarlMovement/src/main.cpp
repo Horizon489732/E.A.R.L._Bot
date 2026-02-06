@@ -33,7 +33,7 @@ int LB_ENA = 8;
 
 // Default speed (0–255)
 int speed = 255;
-int turnOffset = 30;   // try 20–40 for gentle turns
+int turnOffset = 80;   // try 20–40 for gentle turns
 
 
 // for distance reading
