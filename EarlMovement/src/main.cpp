@@ -1,35 +1,14 @@
 #include <Arduino.h>
-// NOTE THE SMALL SIDE IS THE FRONT SIDE
-
-// left side
-// ===== Motor pins for first L298N =====
-
-//Right Motor Driver
-
-// --- RIGHT MOTOR DRIVER (L298N #1) ---
-
-// Right Front Motor
-int RF_IN1 = 6;
-int RF_IN2 = 5;
-int RF_ENA = 7;
-
-// Right Back Motor
-int RB_IN3 = 3;
-int RB_IN4 = 2;
-int RB_ENA = 4;
-
-
-// --- LEFT MOTOR DRIVER (L298N #2) ---
 
 // Left Front Motor
-int LF_IN3 = 12;
-int LF_IN4 = 11;
-int LF_ENA = 13;
+int L_IN1 = 6;
+int L_IN2 = 5;
+int L_ENA = 7;
 
-// Left Back Motor
-int LB_IN1 = 9;
-int LB_IN2 = 10;
-int LB_ENA = 8;
+// Right Front Motor
+int R_IN1 = 8;
+int R_IN2 = 9;
+int R_ENA = 10;
 
 // Default speed (0–255)
 int speed = 255;
@@ -50,19 +29,13 @@ AnchorDistances dist;
 
 // ===================== Helper: Stop all motors =====================
 void stopMotors() {
-  analogWrite(RF_ENA, 0);
-  analogWrite(RB_ENA, 0);
-  analogWrite(LF_ENA, 0);
-  analogWrite(LB_ENA, 0);
+  analogWrite(L_ENA, 0);
+  analogWrite(R_ENA, 0);
 
-  digitalWrite(RF_IN1, LOW);
-  digitalWrite(RF_IN2, LOW);
-  digitalWrite(RB_IN3, LOW);
-  digitalWrite(RB_IN4, LOW);
-  digitalWrite(LF_IN3, LOW);
-  digitalWrite(LF_IN4, LOW);
-  digitalWrite(LB_IN1, LOW);
-  digitalWrite(LB_IN2, LOW);
+  digitalWrite(R_IN1, LOW);
+  digitalWrite(R_IN2, LOW);
+  digitalWrite(L_IN1, LOW);
+  digitalWrite(L_IN2, LOW);
 }
 
 // =====================
@@ -70,149 +43,74 @@ void stopMotors() {
 // =====================
 // ===================== Move Forward =====================
 void forward(int spd) {
-  analogWrite(RF_ENA, spd);
-  analogWrite(RB_ENA, spd);
-  analogWrite(LF_ENA, spd);
-  analogWrite(LB_ENA, spd);
+  analogWrite(R_ENA, spd);
+  analogWrite(L_ENA, spd);
 
   // Right side forward
-  digitalWrite(RF_IN1, HIGH);
-  digitalWrite(RF_IN2, LOW);
-  digitalWrite(RB_IN3, HIGH);
-  digitalWrite(RB_IN4, LOW);
+  digitalWrite(R_IN1, HIGH);
+  digitalWrite(R_IN2, LOW);
 
   // Left side forward
-  digitalWrite(LF_IN3, HIGH);
-  digitalWrite(LF_IN4, LOW);
-  digitalWrite(LB_IN1, HIGH);
-  digitalWrite(LB_IN2, LOW);
+  digitalWrite(L_IN1, HIGH);
+  digitalWrite(L_IN2, LOW);
 }
 
 
 // ===================== Move Backward =====================
 void backward(int spd) {
-  analogWrite(RF_ENA, spd);
-  analogWrite(RB_ENA, spd);
-  analogWrite(LF_ENA, spd);
-  analogWrite(LB_ENA, spd);
+  analogWrite(R_ENA, spd);
+  analogWrite(L_ENA, spd);
+
 
   // Right side backward
-  digitalWrite(RF_IN1, LOW);
-  digitalWrite(RF_IN2, HIGH);
-  digitalWrite(RB_IN3, LOW);
-  digitalWrite(RB_IN4, HIGH);
+  digitalWrite(R_IN1, LOW);
+  digitalWrite(R_IN2, HIGH);
 
   // Left side backward
-  digitalWrite(LF_IN3, LOW);
-  digitalWrite(LF_IN4, HIGH);
-  digitalWrite(LB_IN1, LOW);
-  digitalWrite(LB_IN2, HIGH);
-}
-
-
-// ===================== Full Turn Left (spin in place) =====================
-void fullTurnLeft(int spd) {
-  analogWrite(RF_ENA, spd);
-  analogWrite(RB_ENA, spd);
-  analogWrite(LF_ENA, spd);
-  analogWrite(LB_ENA, spd);
-
-  // Right side forward
-  digitalWrite(RF_IN1, HIGH);
-  digitalWrite(RF_IN2, LOW);
-  digitalWrite(RB_IN3, HIGH);
-  digitalWrite(RB_IN4, LOW);
-
-  // Left side backward
-  digitalWrite(LF_IN3, LOW);
-  digitalWrite(LF_IN4, HIGH);
-  digitalWrite(LB_IN1, LOW);
-  digitalWrite(LB_IN2, HIGH);
-}
-
-
-// ===================== Full Turn Right (spin in place) =====================
-void fullTurnRight(int spd) {
-  analogWrite(RF_ENA, spd);
-  analogWrite(RB_ENA, spd);
-  analogWrite(LF_ENA, spd);
-  analogWrite(LB_ENA, spd);
-
-  // Left side forward
-  digitalWrite(LF_IN3, HIGH);
-  digitalWrite(LF_IN4, LOW);
-  digitalWrite(LB_IN1, HIGH);
-  digitalWrite(LB_IN2, LOW);
-
-  // Right side backward
-  digitalWrite(RF_IN1, LOW);
-  digitalWrite(RF_IN2, HIGH);
-  digitalWrite(RB_IN3, LOW);
-  digitalWrite(RB_IN4, HIGH);
+  digitalWrite(L_IN1, LOW);
+  digitalWrite(L_IN2, HIGH);
 }
 
 
 // ===================== Move Forward + Turn Left (curve left) =====================
 void moveAndTurnLeft(int spd) {
-  analogWrite(RF_ENA, spd);
-  analogWrite(RB_ENA, spd);
-
-  analogWrite(LF_ENA, spd / 2);   // slower left side
-  analogWrite(LB_ENA, spd / 2);
+  analogWrite(R_ENA, spd);
+  analogWrite(L_ENA, spd / 2);   // slower left side
 
   // Forward both sides
-  digitalWrite(RF_IN1, HIGH);
-  digitalWrite(RF_IN2, LOW);
-  digitalWrite(RB_IN3, HIGH);
-  digitalWrite(RB_IN4, LOW);
+  digitalWrite(R_IN1, HIGH);
+  digitalWrite(R_IN2, LOW);
 
-  digitalWrite(LF_IN3, HIGH);
-  digitalWrite(LF_IN4, LOW);
-  digitalWrite(LB_IN1, HIGH);
-  digitalWrite(LB_IN2, LOW);
+  digitalWrite(L_IN1, HIGH);
+  digitalWrite(L_IN2, LOW);
 }
 
 
 // ===================== Move Forward + Turn Right (curve right) =====================
 void moveAndTurnRight(int spd) {
-  analogWrite(LF_ENA, spd);
-  analogWrite(LB_ENA, spd);
+  analogWrite(L_ENA, spd);
+  analogWrite(R_ENA, spd / 2);   // slower right side
 
-  analogWrite(RF_ENA, spd / 2);   // slower right side
-  analogWrite(RB_ENA, spd / 2);
 
   // Forward both sides
-  digitalWrite(RF_IN1, HIGH);
-  digitalWrite(RF_IN2, LOW);
-  digitalWrite(RB_IN3, HIGH);
-  digitalWrite(RB_IN4, LOW);
-
-  digitalWrite(LF_IN3, HIGH);
-  digitalWrite(LF_IN4, LOW);
-  digitalWrite(LB_IN1, HIGH);
-  digitalWrite(LB_IN2, LOW);
+  digitalWrite(R_IN1, HIGH);
+  digitalWrite(R_IN2, LOW);
+  digitalWrite(L_IN1, HIGH);
+  digitalWrite(L_IN2, LOW);
 }
 
 void moveAndTurnLeft2(int spd) {
   int leftSpeed = spd - turnOffset;
   if (leftSpeed < 0) leftSpeed = 0;
 
-  analogWrite(RF_ENA, spd);
-  analogWrite(RB_ENA, spd);
-
-  analogWrite(LF_ENA, leftSpeed);
-  analogWrite(LB_ENA, leftSpeed);
+  analogWrite(R_ENA, spd);
+  analogWrite(L_ENA, leftSpeed);
 
   // Forward both sides
-  digitalWrite(RF_IN1, HIGH);
-  digitalWrite(RF_IN2, LOW);
-  digitalWrite(RB_IN3, HIGH);
-  digitalWrite(RB_IN4, LOW);
-
-  digitalWrite(LF_IN3, HIGH);
-  digitalWrite(LF_IN4, LOW);
-  digitalWrite(LB_IN1, HIGH);
-  digitalWrite(LB_IN2, LOW);
+  digitalWrite(R_IN1, HIGH);
+  digitalWrite(R_IN2, LOW);
+  digitalWrite(L_IN1, HIGH);
+  digitalWrite(L_IN2, LOW);
 }
 
 
@@ -220,22 +118,14 @@ void moveAndTurnRight2(int spd) {
   int rightSpeed = spd - turnOffset;
   if (rightSpeed < 0) rightSpeed = 0;
 
-  analogWrite(LF_ENA, spd);
-  analogWrite(LB_ENA, spd);
-
-  analogWrite(RF_ENA, rightSpeed);
-  analogWrite(RB_ENA, rightSpeed);
+  analogWrite(L_ENA, spd);
+  analogWrite(R_ENA, rightSpeed);
 
   // Forward both sides
-  digitalWrite(RF_IN1, HIGH);
-  digitalWrite(RF_IN2, LOW);
-  digitalWrite(RB_IN3, HIGH);
-  digitalWrite(RB_IN4, LOW);
-
-  digitalWrite(LF_IN3, HIGH);
-  digitalWrite(LF_IN4, LOW);
-  digitalWrite(LB_IN1, HIGH);
-  digitalWrite(LB_IN2, LOW);
+  digitalWrite(R_IN1, HIGH);
+  digitalWrite(R_IN2, LOW);
+  digitalWrite(L_IN1, HIGH);
+  digitalWrite(L_IN2, LOW);
 }
 
 // ===================== SERIAL PARSING =====================
@@ -310,24 +200,14 @@ void calculateDirection(){
 
 void setup() {
   // Right Front Motor
-  pinMode(RF_IN1, OUTPUT);
-  pinMode(RF_IN2, OUTPUT);
-  pinMode(RF_ENA, OUTPUT);
-
-  // Right Back Motor
-  pinMode(RB_IN3, OUTPUT);
-  pinMode(RB_IN4, OUTPUT);
-  pinMode(RB_ENA, OUTPUT);
-
-  // Left Front Motor
-  pinMode(LF_IN3, OUTPUT);
-  pinMode(LF_IN4, OUTPUT);
-  pinMode(LF_ENA, OUTPUT);
+  pinMode(R_IN1, OUTPUT);
+  pinMode(R_IN2, OUTPUT);
+  pinMode(R_ENA, OUTPUT);
 
   // Left Back Motor
-  pinMode(LB_IN1, OUTPUT);
-  pinMode(LB_IN2, OUTPUT);
-  pinMode(LB_ENA, OUTPUT);
+  pinMode(L_IN1, OUTPUT);
+  pinMode(L_IN2, OUTPUT);
+  pinMode(L_ENA, OUTPUT);
 
   Serial.begin(115200);
   Serial1.begin(9600);
@@ -342,6 +222,7 @@ void setup() {
 // Loop example
 // =====================
 void loop() {
+
   // Check if any data has arrived from the ESP32
   if (Serial1.available()) {
     // Read the line until the newline character '\n'
