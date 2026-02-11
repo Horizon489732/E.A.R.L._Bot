@@ -12,7 +12,7 @@ int R_ENA = 10;
 
 // Default speed (0–255)
 int speed = 255;
-int turnOffset = 80;   // try 20–40 for gentle turns
+// int turnOffset = 80;   // try 20–40 for gentle turns
 
 
 // for distance reading
@@ -72,39 +72,13 @@ void backward(int spd) {
 }
 
 
-// ===================== Move Forward + Turn Left (curve left) =====================
-void moveAndTurnLeft(int spd) {
-  analogWrite(R_ENA, spd);
-  analogWrite(L_ENA, spd / 2);   // slower left side
 
-  // Forward both sides
-  digitalWrite(R_IN1, HIGH);
-  digitalWrite(R_IN2, LOW);
-
-  digitalWrite(L_IN1, HIGH);
-  digitalWrite(L_IN2, LOW);
-}
-
-
-// ===================== Move Forward + Turn Right (curve right) =====================
-void moveAndTurnRight(int spd) {
-  analogWrite(L_ENA, spd);
-  analogWrite(R_ENA, spd / 2);   // slower right side
-
-
-  // Forward both sides
-  digitalWrite(R_IN1, HIGH);
-  digitalWrite(R_IN2, LOW);
-  digitalWrite(L_IN1, HIGH);
-  digitalWrite(L_IN2, LOW);
-}
-
-void moveAndTurnLeft2(int spd) {
-  int leftSpeed = spd - turnOffset;
-  if (leftSpeed < 0) leftSpeed = 0;
+void moveAndTurnLeft2(int spd, int percentSpd) {
+  // int leftSpeed = spd - turnOffset;
+  // if (leftSpeed < 0) leftSpeed = 0;
 
   analogWrite(R_ENA, spd);
-  analogWrite(L_ENA, leftSpeed);
+  analogWrite(L_ENA, spd * (percentSpd / 100.0));
 
   // Forward both sides
   digitalWrite(R_IN1, HIGH);
@@ -114,12 +88,13 @@ void moveAndTurnLeft2(int spd) {
 }
 
 
-void moveAndTurnRight2(int spd) {
-  int rightSpeed = spd - turnOffset;
-  if (rightSpeed < 0) rightSpeed = 0;
+void moveAndTurnRight2(int spd, int percentSpd) {
+  // int rightSpeed = spd - turnOffset;
+  // if (rightSpeed < 0) rightSpeed = 0;
 
   analogWrite(L_ENA, spd);
-  analogWrite(R_ENA, rightSpeed);
+  analogWrite(R_ENA, spd * (percentSpd / 100.0));
+  // analogWrite(R_ENA, rightSpeed);
 
   // Forward both sides
   digitalWrite(R_IN1, HIGH);
@@ -171,7 +146,7 @@ void calculateDirection(){
   // distance of either 1 and 2 is greater than 10mm
   // continue going
   if ((dist.anchor1 >30) && (dist.anchor2>30)){
-      if (dist.anchor1 < 250 || dist.anchor2 < 250) {
+      if (dist.anchor1 < 175 || dist.anchor2 < 175) {
       // stopping motor to little distance
       Serial.println("Stopping Motors");
       stopMotors();
@@ -182,16 +157,33 @@ void calculateDirection(){
       Serial.println("Moving Forward");
       forward(speed);
       }
-      else {
+
+      else if (abs(dist.anchor1 - dist.anchor2) >= 15 && abs(dist.anchor1 - dist.anchor2) < 40){
+        // 70 percent speed difference for moderate turn
+        Serial.println("MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM");
         if (dist.anchor1>dist.anchor2){
           // Turn Right
           Serial.println("Turning Right");
-          moveAndTurnRight2(speed);
+          moveAndTurnRight2(speed,70); // 70% speed on right side for sharper turn
         }
         else {
           // Turn Left
           Serial.println("Turning Left");
-          moveAndTurnLeft2(speed);
+          moveAndTurnLeft2(speed,70); // 70% speed on left side for sharper turn
+        }
+      }
+       else if (abs(dist.anchor1 - dist.anchor2) >= 40 ){
+        Serial.println("SSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS");
+        // 40 percent speed difference for sharp turn
+        if (dist.anchor1>dist.anchor2){
+          // Turn Right
+          Serial.println("Turning Right");
+          moveAndTurnRight2(speed,30); // 40% speed on right side for sharper turn
+        }
+        else {
+          // Turn Left
+          Serial.println("Turning Left");
+          moveAndTurnLeft2(speed,30); // 40% speed on left side for sharper turn
         }
       }
     }
@@ -229,8 +221,8 @@ void loop() {
     String incomingLine = Serial1.readStringUntil('\n');
     
     // Print the raw string exactly as it arrived
-    Serial.print("Received from ESP32: ");
-    Serial.println(incomingLine);
+    // Serial.print("Received from ESP32: ");
+    // Serial.println(incomingLine);
     parseAnchorDistance(incomingLine);
     Serial.print("Anchor1: "); Serial.println(dist.anchor1);
     Serial.print("Anchor2: "); Serial.println(dist.anchor2);
