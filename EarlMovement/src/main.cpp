@@ -137,7 +137,7 @@ void parseAnchorDistance(String line){
 }
 
 void calculateDirection(){
-  if (dist.anchor1 == -1|| dist.anchor1 == 65535 || dist.anchor2 == -1 || dist.anchor2 == 65535){
+  if (dist.anchor1 == -1|| dist.anchor1 == 65535 || dist.anchor2 == -1 || dist.anchor2 == 65535 || dist.anchor3 == -1 || dist.anchor3 == 65535){
     // checking if tag is disconnected
     Serial.println("Stop Moving - check if tag is disconnected");
     stopMotors();
@@ -146,12 +146,38 @@ void calculateDirection(){
   // distance of either 1 and 2 is greater than 10mm
   // continue going
   if ((dist.anchor1 >30) && (dist.anchor2>30)){
-      if (dist.anchor1 < 175 || dist.anchor2 < 175) {
-      // stopping motor to little distance
-      Serial.println("Stopping Motors");
-      stopMotors();
+    // stopping motor to little distance
+    if (dist.anchor1 < 175 || dist.anchor2 < 175) {
+    Serial.println("Stopping Motors");
+    stopMotors();
       }
+
+    //movement
     else {
+      // if anchor 3 is the farthest it is not going the right direction
+      if (dist.anchor3>dist.anchor1&&dist.anchor3>dist.anchor2){
+        // back away if anchor 3 is the farthest
+        Serial.println("full turn");
+        if (dist.anchor1>dist.anchor2){
+          // Turn Right
+          Serial.println("Turning Right");
+          moveAndTurnRight2(speed,0); // 0% speed on right side for pivot
+        }
+        else {
+          // Turn Left
+          Serial.println("Turning Left");
+          moveAndTurnLeft2(speed,0); // 0% speed on left side for pivot
+        }
+        return;
+      }
+      // go straight movement
+      // else {
+      //     // Turn Left
+      //     Serial.println("Turning Left");
+      //     moveAndTurnLeft2(speed,30); // 40% speed on left side for sharper turn
+      //   }
+        // return;
+      }
       if (abs(dist.anchor1 - dist.anchor2) < 15){
       // Move Forward
       Serial.println("Moving Forward");
@@ -188,7 +214,7 @@ void calculateDirection(){
       }
     }
   }
-}
+
 
 void setup() {
   // Right Front Motor
@@ -226,7 +252,7 @@ void loop() {
     parseAnchorDistance(incomingLine);
     Serial.print("Anchor1: "); Serial.println(dist.anchor1);
     Serial.print("Anchor2: "); Serial.println(dist.anchor2);
-  //   Serial.print("Anchor3: "); Serial.println(dist.anchor3);
+    Serial.print("Anchor3: "); Serial.println(dist.anchor3);
     calculateDirection();
 
   }
