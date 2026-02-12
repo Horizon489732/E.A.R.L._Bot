@@ -135,85 +135,85 @@ void parseAnchorDistance(String line){
       case 3: dist.anchor3 = distance; break;
   }
 }
+void calculateDirection() {
 
-void calculateDirection(){
-  if (dist.anchor1 == -1|| dist.anchor1 == 65535 || dist.anchor2 == -1 || dist.anchor2 == 65535 || dist.anchor3 == -1 || dist.anchor3 == 65535){
-    // checking if tag is disconnected
-    Serial.println("Stop Moving - check if tag is disconnected");
+  // =============================
+  // 1️⃣ Check if tag disconnected
+  // =============================
+  if (dist.anchor1 == -1 || dist.anchor1 == 65535 ||
+      dist.anchor2 == -1 || dist.anchor2 == 65535 ||
+      dist.anchor3 == -1 || dist.anchor3 == 65535) {
+
+    Serial.println("Stop Moving - tag disconnected");
     stopMotors();
     return;
   }
-  // distance of either 1 and 2 is greater than 10mm
-  // continue going
-  if ((dist.anchor1 >30) && (dist.anchor2>30)){
-    // stopping motor to little distance
-    if (dist.anchor1 < 175 || dist.anchor2 < 175) {
-    Serial.println("Stopping Motors");
+
+  // =============================
+  // 2️⃣ Make sure anchors valid
+  // =============================
+  if (dist.anchor1 <= 30 || dist.anchor2 <= 30) {
+    Serial.println("Invalid small reading");
     stopMotors();
-      }
+    return;
+  }
 
-    //movement
-    else {
-      // if anchor 3 is the farthest it is not going the right direction
-      if (dist.anchor3>dist.anchor1&&dist.anchor3>dist.anchor2){
-        // back away if anchor 3 is the farthest
-        Serial.println("full turn");
-        if (dist.anchor1>dist.anchor2){
-          // Turn Right
-          Serial.println("Turning Right");
-          moveAndTurnRight2(speed,0); // 0% speed on right side for pivot
-        }
-        else {
-          // Turn Left
-          Serial.println("Turning Left");
-          moveAndTurnLeft2(speed,0); // 0% speed on left side for pivot
-        }
-        return;
-      }
-      // go straight movement
-      // else {
-      //     // Turn Left
-      //     Serial.println("Turning Left");
-      //     moveAndTurnLeft2(speed,30); // 40% speed on left side for sharper turn
-      //   }
-        // return;
-      }
-      if (abs(dist.anchor1 - dist.anchor2) < 15){
-      // Move Forward
-      Serial.println("Moving Forward");
-      forward(speed);
-      }
+  // =============================
+  // 3️⃣ Stop if too close
+  // =============================
+  if (dist.anchor1 < 175 || dist.anchor2 < 175) {
+    Serial.println("Stopping Motors - too close");
+    stopMotors();
+    return;
+  }
 
-      else if (abs(dist.anchor1 - dist.anchor2) >= 15 && abs(dist.anchor1 - dist.anchor2) < 40){
-        // 70 percent speed difference for moderate turn
-        Serial.println("MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM");
-        if (dist.anchor1>dist.anchor2){
-          // Turn Right
-          Serial.println("Turning Right");
-          moveAndTurnRight2(speed,70); // 70% speed on right side for sharper turn
-        }
-        else {
-          // Turn Left
-          Serial.println("Turning Left");
-          moveAndTurnLeft2(speed,70); // 70% speed on left side for sharper turn
-        }
-      }
-       else if (abs(dist.anchor1 - dist.anchor2) >= 40 ){
-        Serial.println("SSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS");
-        // 40 percent speed difference for sharp turn
-        if (dist.anchor1>dist.anchor2){
-          // Turn Right
-          Serial.println("Turning Right");
-          moveAndTurnRight2(speed,30); // 40% speed on right side for sharper turn
-        }
-        else {
-          // Turn Left
-          Serial.println("Turning Left");
-          moveAndTurnLeft2(speed,30); // 40% speed on left side for sharper turn
-        }
-      }
+  // =============================
+  // 4️⃣ Wrong direction check
+  // =============================
+  if (dist.anchor3 > dist.anchor1 && dist.anchor3 > dist.anchor2) {
+
+    Serial.println("Wrong direction - pivot");
+
+    if (dist.anchor1 > dist.anchor2) {
+      Serial.println("Pivot Right");
+      moveAndTurnRight2(speed, 0);
+    } else {
+      Serial.println("Pivot Left");
+      moveAndTurnLeft2(speed, 0);
+    }
+
+    return;
+  }
+
+  // =============================
+  // 5️⃣ Normal steering logic
+  // =============================
+
+  int diff = abs(dist.anchor1 - dist.anchor2);
+
+  if (diff < 15) {
+    Serial.println("Moving Forward");
+    forward(speed);
+  }
+  else if (diff < 40) {
+    Serial.println("Moderate Turn");
+
+    if (dist.anchor1 > dist.anchor2) {
+      moveAndTurnRight2(speed, 70);
+    } else {
+      moveAndTurnLeft2(speed, 70);
     }
   }
+  else {
+    Serial.println("Sharp Turn");
+
+    if (dist.anchor1 > dist.anchor2) {
+      moveAndTurnRight2(speed, 30);
+    } else {
+      moveAndTurnLeft2(speed, 30);
+    }
+  }
+}
 
 
 void setup() {
