@@ -18,6 +18,21 @@ int speed = 255;
 // for distance reading
 String incoming = "";
 
+// ===================== HC-SR04 (LEFT) SETUP =====================
+// Available pins you said: 2 3 4 11 12 13
+// We'll use 11 and 12 for the left sensor
+const int L_TRIG_PIN = 11;
+const int L_ECHO_PIN = 12;
+const int R_TRIG_PIN = 2;
+const int R_ECHO_PIN = 3;
+
+float leftTiming = 0.0;
+float leftDistanceCm = 0.0;
+float rightTiming = 0.0;
+float rightDistanceCm = 0.0;
+
+
+
 // Define a struct to hold anchor distances
 struct AnchorDistances {
   int anchor1 = 0;
@@ -135,7 +150,41 @@ void parseAnchorDistance(String line){
       case 3: dist.anchor3 = distance; break;
   }
 }
+
+// Read left ultrasonic distance in cm (returns 0 if no echo / timeout)
+float readLeftUltrasonicCm() {
+  digitalWrite(L_TRIG_PIN, LOW);
+  delayMicroseconds(5);
+
+  digitalWrite(L_TRIG_PIN, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(L_TRIG_PIN, LOW);
+
+  leftTiming = pulseIn(L_ECHO_PIN, HIGH, 30000); // ~30ms timeout
+  if (leftTiming == 0) return 0;                 // no reading
+
+  return (leftTiming * 0.0344) / 2.0;
+}
+
+// Read right ultrasonic distance in cm
+float readRightUltrasonicCm() {
+  digitalWrite(R_TRIG_PIN, LOW);
+  delayMicroseconds(5);
+
+  digitalWrite(R_TRIG_PIN, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(R_TRIG_PIN, LOW);
+
+  rightTiming = pulseIn(R_ECHO_PIN, HIGH, 30000);
+  if (rightTiming == 0) return 0;
+
+  return (rightTiming * 0.0344) / 2.0;
+}
+
+
+
 void calculateDirection() {
+  
 
   // =============================
   // 1️⃣ Check if tag disconnected
@@ -185,6 +234,21 @@ void calculateDirection() {
     return;
   }
 
+    // 0️⃣ Ultrasonic avoidance (LEFT) if <= 30 cm: turning right briefly
+  if (leftDistanceCm > 0 && leftDistanceCm <= 30) {
+    Serial.println("Too close on left HC-SR04 (<= 30cm) - turning right");
+    moveAndTurnRight2(speed, 30);
+    delay(300);
+    return;
+  }
+
+  if (rightDistanceCm > 0 && rightDistanceCm <= 30) {
+  Serial.println("Too close on right HC-SR04 (<= 30cm) - turning left");
+  moveAndTurnLeft2(speed, 30);
+  delay(300);
+  return;
+}
+
   // =============================
   // 5️⃣ Normal steering logic
   // =============================
@@ -227,6 +291,16 @@ void setup() {
   pinMode(L_IN2, OUTPUT);
   pinMode(L_ENA, OUTPUT);
 
+  // ===================== HC-SR04 (LEFT) PINMODES =====================
+  pinMode(L_TRIG_PIN, OUTPUT);
+  pinMode(L_ECHO_PIN, INPUT);
+  digitalWrite(L_TRIG_PIN, LOW);
+
+  // ===================== HC-SR04 (RIGHT) PINMODES =====================
+  pinMode(R_TRIG_PIN, OUTPUT);
+  pinMode(R_ECHO_PIN, INPUT);
+  digitalWrite(R_TRIG_PIN, LOW);
+
   Serial.begin(115200);
   Serial1.begin(9600);
 
@@ -241,20 +315,37 @@ void setup() {
 // =====================
 void loop() {
 
+  // =====================
+  // Read LEFT HC-SR04 distance
+  // =====================
+  leftDistanceCm = readLeftUltrasonicCm();
+  rightDistanceCm = readRightUltrasonicCm();
+
+  // right print distances <= 50 cm
+  if (rightDistanceCm > 0 && rightDistanceCm <= 50) {
+    Serial.print("Right HC-SR04: ");
+    Serial.print(rightDistanceCm);
+    Serial.println(" cm");
+  }
+
+  // left print distances <= 50 cm 
+  if (leftDistanceCm > 0 && leftDistanceCm <= 50) {
+    Serial.print("Left HC-SR04: ");
+    Serial.print(leftDistanceCm);
+    Serial.println(" cm");
+  }
+
   // Check if any data has arrived from the ESP32
   if (Serial1.available()) {
     // Read the line until the newline character '\n'
     String incomingLine = Serial1.readStringUntil('\n');
     
-    // Print the raw string exactly as it arrived
-    // Serial.print("Received from ESP32: ");
-    // Serial.println(incomingLine);
     parseAnchorDistance(incomingLine);
     Serial.print("Anchor1: "); Serial.println(dist.anchor1);
     Serial.print("Anchor2: "); Serial.println(dist.anchor2);
     Serial.print("Anchor3: "); Serial.println(dist.anchor3);
     calculateDirection();
-
   }
+
+  delay(100);
 }
-  
