@@ -235,14 +235,14 @@ void calculateDirection() {
   }
 
     // 0️⃣ Ultrasonic avoidance (LEFT) if <= 30 cm: turning right briefly
-  if (leftDistanceCm > 0 && leftDistanceCm <= 30) {
+  if (leftDistanceCm > 0 && leftDistanceCm <= 20) {
     Serial.println("Too close on left HC-SR04 (<= 30cm) - turning right");
     moveAndTurnRight2(speed, 30);
     delay(300);
     return;
   }
 
-  if (rightDistanceCm > 0 && rightDistanceCm <= 30) {
+  if (rightDistanceCm > 0 && rightDistanceCm <= 20) {
   Serial.println("Too close on right HC-SR04 (<= 30cm) - turning left");
   moveAndTurnLeft2(speed, 30);
   delay(300);
@@ -347,5 +347,5 @@ void loop() {
     calculateDirection();
   }
 
-  delay(100);
+  delay(5);
 }
