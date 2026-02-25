@@ -234,7 +234,19 @@ void calculateDirection() {
     return;
   }
 
-    // 0️⃣ Ultrasonic avoidance (LEFT) if <= 30 cm: turning right briefly
+  // =============================
+  // Doorway balancing override:
+  // If BOTH sensors read <= 20 cm, go straight (overwrite turning).
+  // =============================
+  if (leftDistanceCm > 0 && rightDistanceCm > 0 &&
+      leftDistanceCm <= 30 && rightDistanceCm <= 30) {
+
+    Serial.println("Doorway balancing: BOTH <= 20cm -> going straight");
+    forward(speed);          // or forward(speed * 0.8)
+    return;
+  }
+
+  // 0️⃣ Ultrasonic avoidance (LEFT) if <= 20 cm: turning right briefly
   if (leftDistanceCm > 0 && leftDistanceCm <= 20) {
     Serial.println("Too close on left HC-SR04 (<= 30cm) - turning right");
     moveAndTurnRight2(speed, 30);
@@ -243,11 +255,11 @@ void calculateDirection() {
   }
 
   if (rightDistanceCm > 0 && rightDistanceCm <= 20) {
-  Serial.println("Too close on right HC-SR04 (<= 30cm) - turning left");
-  moveAndTurnLeft2(speed, 30);
-  delay(300);
-  return;
-}
+    Serial.println("Too close on right HC-SR04 (<= 30cm) - turning left");
+    moveAndTurnLeft2(speed, 30);
+    delay(300);
+    return;
+  }
 
   // =============================
   // 5️⃣ Normal steering logic
