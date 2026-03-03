@@ -35,12 +35,12 @@ void notifyCallback(BLERemoteCharacteristic* pChar,
     // ----- DEBUG (USB Serial) -----
     Serial.printf("Anchor 1 - Distance: %d mm\n", a1);
     Serial.printf("Anchor 2 - Distance: %d mm\n", a2);
-    // Serial.printf("Anchor 3 - Distance: %d mm\n", a3);
+    Serial.printf("Anchor 3 - Distance: %d mm\n", a3);
 
     // ----- SEND TO MOTOR ARDUINO -----
     Serial2.printf("Anchor 1 - Distance: %d mm\n", a1);
     Serial2.printf("Anchor 2 - Distance: %d mm\n", a2);
-    // Serial2.printf("Anchor 3 - Distance: %d mm\n", a3);
+    Serial2.printf("Anchor 3 - Distance: %d mm\n", a3);
 }
 
 
