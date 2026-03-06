@@ -12,28 +12,36 @@ int R_ENA = 10;
 
 // Default speed (0–255)
 int speed = 255;
-// int turnOffset = 80;   // try 20–40 for gentle turns
-
 
 // for distance reading
 String incoming = "";
 
-// ===================== HC-SR04 (LEFT) SETUP =====================
-// Available pins you said: 2 3 4 11 12 13
-// We'll use 11 and 12 for the left sensor
-const int L_TRIG_PIN = 11;
+// ===================== HC-SR04 SETUP =====================
+// Current sensors (you already have these)
+const int L_TRIG_PIN = 11;   // LEFT FRONT
 const int L_ECHO_PIN = 12;
-const int R_TRIG_PIN = 2;
+
+const int R_TRIG_PIN = 2;    // RIGHT FRONT
 const int R_ECHO_PIN = 3;
+
+// NEW sensors (CHANGE THESE PINS TO MATCH YOUR WIRING)
+const int L2_TRIG_PIN = 47;   // LEFT SIDE (new)
+const int L2_ECHO_PIN = 46;
+
+const int R2_TRIG_PIN = 45;  // RIGHT SIDE (new)  <-- change if you want
+const int R2_ECHO_PIN = 44;  // RIGHT SIDE (new)  <-- change if you want
 
 float leftTiming = 0.0;
 float leftDistanceCm = 0.0;
 float rightTiming = 0.0;
 float rightDistanceCm = 0.0;
 
+float left2Timing = 0.0;
+float left2DistanceCm = 0.0;
+float right2Timing = 0.0;
+float right2DistanceCm = 0.0;
 
-
-// Define a struct to hold anchor distances
+// Anchor distances
 struct AnchorDistances {
   int anchor1 = 0;
   int anchor2 = 0;
@@ -41,6 +49,14 @@ struct AnchorDistances {
 };
 
 AnchorDistances dist;
+
+// ===================== Avoidance settings/state =====================
+const int AVOID_CM = 30;        // object avoidance threshold
+const int DOORWAY_CM = 20;      // doorway override threshold
+
+int avoidSide = 0;              // 0 = none, 1 = avoiding LEFT side, 2 = avoiding RIGHT side
+int avoidSensor = 0;            // 1 = front sensor triggered, 2 = side sensor triggered
+bool avoidPrinted = false;      // print message once when starting avoidance
 
 // ===================== Helper: Stop all motors =====================
 void stopMotors() {
@@ -53,65 +69,44 @@ void stopMotors() {
   digitalWrite(L_IN2, LOW);
 }
 
-// =====================
-// Movement functions (control all 4 motors)
-// =====================
 // ===================== Move Forward =====================
 void forward(int spd) {
-  analogWrite(R_ENA, spd);
-  analogWrite(L_ENA, spd);
+  analogWrite(R_ENA, spd * 0.8);
+  analogWrite(L_ENA, spd );
 
-  // Right side forward
   digitalWrite(R_IN1, HIGH);
   digitalWrite(R_IN2, LOW);
 
-  // Left side forward
   digitalWrite(L_IN1, HIGH);
   digitalWrite(L_IN2, LOW);
 }
-
 
 // ===================== Move Backward =====================
 void backward(int spd) {
   analogWrite(R_ENA, spd);
   analogWrite(L_ENA, spd);
 
-
-  // Right side backward
   digitalWrite(R_IN1, LOW);
   digitalWrite(R_IN2, HIGH);
 
-  // Left side backward
   digitalWrite(L_IN1, LOW);
   digitalWrite(L_IN2, HIGH);
 }
 
-
-
 void moveAndTurnLeft2(int spd, int percentSpd) {
-  // int leftSpeed = spd - turnOffset;
-  // if (leftSpeed < 0) leftSpeed = 0;
-
   analogWrite(R_ENA, spd);
   analogWrite(L_ENA, spd * (percentSpd / 100.0));
 
-  // Forward both sides
   digitalWrite(R_IN1, HIGH);
   digitalWrite(R_IN2, LOW);
   digitalWrite(L_IN1, HIGH);
   digitalWrite(L_IN2, LOW);
 }
 
-
 void moveAndTurnRight2(int spd, int percentSpd) {
-  // int rightSpeed = spd - turnOffset;
-  // if (rightSpeed < 0) rightSpeed = 0;
-
   analogWrite(L_ENA, spd);
   analogWrite(R_ENA, spd * (percentSpd / 100.0));
-  // analogWrite(R_ENA, rightSpeed);
 
-  // Forward both sides
   digitalWrite(R_IN1, HIGH);
   digitalWrite(R_IN2, LOW);
   digitalWrite(L_IN1, HIGH);
@@ -120,18 +115,14 @@ void moveAndTurnRight2(int spd, int percentSpd) {
 
 // ===================== SERIAL PARSING =====================
 void parseAnchorDistance(String line){
-
-
-  // Step 1: Find the anchor number 
   int anchorID = 0;
   int anchorPos = line.indexOf("Anchor ");
   int dashPos   = line.indexOf(" -");
   if (anchorPos != -1 && dashPos != -1) {
       String idStr = line.substring(anchorPos + 7, dashPos);
-      anchorID = idStr.toInt(); // 1, 2, or 3
+      anchorID = idStr.toInt();
   }
 
-  // Step 2: Find the Distance Value
   int colonIndex = line.indexOf(": ");
   int distance = 0;
   if (colonIndex != -1) {
@@ -143,7 +134,6 @@ void parseAnchorDistance(String line){
       distance = distanceStr.toInt();
   }
 
-  //Step 3: Assign to correct anchor variable
   switch(anchorID) {
       case 1: dist.anchor1 = distance; break;
       case 2: dist.anchor2 = distance; break;
@@ -151,7 +141,9 @@ void parseAnchorDistance(String line){
   }
 }
 
-// Read left ultrasonic distance in cm (returns 0 if no echo / timeout)
+// ===================== Ultrasonic reads =====================
+
+// LEFT FRONT
 float readLeftUltrasonicCm() {
   digitalWrite(L_TRIG_PIN, LOW);
   delayMicroseconds(5);
@@ -160,13 +152,12 @@ float readLeftUltrasonicCm() {
   delayMicroseconds(10);
   digitalWrite(L_TRIG_PIN, LOW);
 
-  leftTiming = pulseIn(L_ECHO_PIN, HIGH, 30000); // ~30ms timeout
-  if (leftTiming == 0) return 0;                 // no reading
-
+  leftTiming = pulseIn(L_ECHO_PIN, HIGH, 30000);
+  if (leftTiming == 0) return 0;
   return (leftTiming * 0.0344) / 2.0;
 }
 
-// Read right ultrasonic distance in cm
+// RIGHT FRONT
 float readRightUltrasonicCm() {
   digitalWrite(R_TRIG_PIN, LOW);
   delayMicroseconds(5);
@@ -177,14 +168,87 @@ float readRightUltrasonicCm() {
 
   rightTiming = pulseIn(R_ECHO_PIN, HIGH, 30000);
   if (rightTiming == 0) return 0;
-
   return (rightTiming * 0.0344) / 2.0;
 }
 
+// LEFT SIDE (new)
+float readLeft2UltrasonicCm() {
+  digitalWrite(L2_TRIG_PIN, LOW);
+  delayMicroseconds(5);
 
+  digitalWrite(L2_TRIG_PIN, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(L2_TRIG_PIN, LOW);
+
+  left2Timing = pulseIn(L2_ECHO_PIN, HIGH, 30000);
+  if (left2Timing == 0) return 0;
+  return (left2Timing * 0.0344) / 2.0;
+}
+
+// RIGHT SIDE (new)
+float readRight2UltrasonicCm() {
+  digitalWrite(R2_TRIG_PIN, LOW);
+  delayMicroseconds(5);
+
+  digitalWrite(R2_TRIG_PIN, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(R2_TRIG_PIN, LOW);
+
+  right2Timing = pulseIn(R2_ECHO_PIN, HIGH, 30000);
+  if (right2Timing == 0) return 0;
+  return (right2Timing * 0.0344) / 2.0;
+}
 
 void calculateDirection() {
-  
+
+  // =============================
+  // If we're already avoiding a side,
+  // keep turning until BOTH sensors on that side are clear.
+  // While doing this, ignore everything else.
+  // =============================
+  if (avoidSide == 1) { // avoiding LEFT side -> turn RIGHT
+    bool leftBlocked = (leftDistanceCm > 0 && leftDistanceCm <= AVOID_CM);
+    bool left2Blocked = (left2DistanceCm > 0 && left2DistanceCm <= AVOID_CM);
+
+    if (leftBlocked || left2Blocked) {
+      if (!avoidPrinted) {
+        Serial.print("Avoiding LEFT side (trigger sensor ");
+        Serial.print(avoidSensor);
+        Serial.println(") -> turning RIGHT until clear");
+        avoidPrinted = true;
+      }
+      moveAndTurnRight2(speed, 20);
+      return;
+    } else {
+      Serial.println("LEFT side clear -> stopping avoidance");
+      avoidSide = 0;
+      avoidSensor = 0;
+      avoidPrinted = false;
+      // fall through to normal logic
+    }
+  }
+
+  if (avoidSide == 2) { // avoiding RIGHT side -> turn LEFT
+    bool rightBlocked = (rightDistanceCm > 0 && rightDistanceCm <= AVOID_CM);
+    bool right2Blocked = (right2DistanceCm > 0 && right2DistanceCm <= AVOID_CM);
+
+    if (rightBlocked || right2Blocked) {
+      if (!avoidPrinted) {
+        Serial.print("Avoiding RIGHT side (trigger sensor ");
+        Serial.print(avoidSensor);
+        Serial.println(") -> turning LEFT until clear");
+        avoidPrinted = true;
+      }
+      moveAndTurnLeft2(speed, 20);
+      return;
+    } else {
+      Serial.println("RIGHT side clear -> stopping avoidance");
+      avoidSide = 0;
+      avoidSensor = 0;
+      avoidPrinted = false;
+      // fall through to normal logic
+    }
+  }
 
   // =============================
   // 1️⃣ Check if tag disconnected
@@ -235,36 +299,58 @@ void calculateDirection() {
   }
 
   // =============================
-  // Doorway balancing override:
-  // If BOTH sensors read <= 20 cm, go straight (overwrite turning).
+  // Doorway balancing override (front sensors only)
   // =============================
   if (leftDistanceCm > 0 && rightDistanceCm > 0 &&
-      leftDistanceCm <= 30 && rightDistanceCm <= 30) {
+      leftDistanceCm <= DOORWAY_CM && rightDistanceCm <= DOORWAY_CM) {
 
     Serial.println("Doorway balancing: BOTH <= 20cm -> going straight");
-    forward(speed);          // or forward(speed * 0.8)
+    forward(speed);
     return;
   }
 
-  // 0️⃣ Ultrasonic avoidance (LEFT) if <= 20 cm: turning right briefly
-  if (leftDistanceCm > 0 && leftDistanceCm <= 20) {
-    Serial.println("Too close on left HC-SR04 (<= 30cm) - turning right");
-    moveAndTurnRight2(speed, 30);
-    delay(300);
+  // =============================
+  // NEW: Side avoidance start
+  // If ONE sensor on a side sees something, start turning away.
+  // Ignore the other sensor for "choosing" what to do (no flip-flopping),
+  // but require BOTH sensors on that side to clear to stop turning.
+  // =============================
+
+  // LEFT side triggers -> start avoiding LEFT side (turn RIGHT)
+  if (leftDistanceCm > 0 && leftDistanceCm <= AVOID_CM) {
+    avoidSide = 1;
+    avoidSensor = 1;   // front left triggered
+    avoidPrinted = false;
+    moveAndTurnRight2(speed, 20);
+    return;
+  }
+  if (left2DistanceCm > 0 && left2DistanceCm <= AVOID_CM) {
+    avoidSide = 1;
+    avoidSensor = 2;   // side left triggered
+    avoidPrinted = false;
+    moveAndTurnRight2(speed, 20);
     return;
   }
 
-  if (rightDistanceCm > 0 && rightDistanceCm <= 20) {
-    Serial.println("Too close on right HC-SR04 (<= 30cm) - turning left");
-    moveAndTurnLeft2(speed, 30);
-    delay(300);
+  // RIGHT side triggers -> start avoiding RIGHT side (turn LEFT)
+  if (rightDistanceCm > 0 && rightDistanceCm <= AVOID_CM) {
+    avoidSide = 2;
+    avoidSensor = 1;   // front right triggered
+    avoidPrinted = false;
+    moveAndTurnLeft2(speed, 20);
+    return;
+  }
+  if (right2DistanceCm > 0 && right2DistanceCm <= AVOID_CM) {
+    avoidSide = 2;
+    avoidSensor = 2;   // side right triggered
+    avoidPrinted = false;
+    moveAndTurnLeft2(speed, 20);
     return;
   }
 
   // =============================
   // 5️⃣ Normal steering logic
   // =============================
-
   int diff = abs(dist.anchor1 - dist.anchor2);
 
   if (diff < 15) {
@@ -275,7 +361,7 @@ void calculateDirection() {
     Serial.println("Moderate Turn");
 
     if (dist.anchor1 > dist.anchor2) {
-      moveAndTurnRight2(speed, 70);
+      moveAndTurnRight2(speed, 40);
     } else {
       moveAndTurnLeft2(speed, 70);
     }
@@ -284,34 +370,41 @@ void calculateDirection() {
     Serial.println("Sharp Turn");
 
     if (dist.anchor1 > dist.anchor2) {
-      moveAndTurnRight2(speed, 30);
+      moveAndTurnRight2(speed, 15);
     } else {
       moveAndTurnLeft2(speed, 30);
     }
   }
 }
 
-
 void setup() {
-  // Right Front Motor
   pinMode(R_IN1, OUTPUT);
   pinMode(R_IN2, OUTPUT);
   pinMode(R_ENA, OUTPUT);
 
-  // Left Back Motor
   pinMode(L_IN1, OUTPUT);
   pinMode(L_IN2, OUTPUT);
   pinMode(L_ENA, OUTPUT);
 
-  // ===================== HC-SR04 (LEFT) PINMODES =====================
+  // LEFT FRONT
   pinMode(L_TRIG_PIN, OUTPUT);
   pinMode(L_ECHO_PIN, INPUT);
   digitalWrite(L_TRIG_PIN, LOW);
 
-  // ===================== HC-SR04 (RIGHT) PINMODES =====================
+  // RIGHT FRONT
   pinMode(R_TRIG_PIN, OUTPUT);
   pinMode(R_ECHO_PIN, INPUT);
   digitalWrite(R_TRIG_PIN, LOW);
+
+  // LEFT SIDE (new)
+  pinMode(L2_TRIG_PIN, OUTPUT);
+  pinMode(L2_ECHO_PIN, INPUT);
+  digitalWrite(L2_TRIG_PIN, LOW);
+
+  // RIGHT SIDE (new)
+  pinMode(R2_TRIG_PIN, OUTPUT);
+  pinMode(R2_ECHO_PIN, INPUT);
+  digitalWrite(R2_TRIG_PIN, LOW);
 
   Serial.begin(115200);
   Serial1.begin(9600);
@@ -320,44 +413,51 @@ void setup() {
   Serial.println("Motors ready!");
 }
 
-
-
-// =====================
-// Loop example
-// =====================
 void loop() {
-
-  // =====================
-  // Read LEFT HC-SR04 distance
-  // =====================
+  // Read all ultrasonic distances
   leftDistanceCm = readLeftUltrasonicCm();
   rightDistanceCm = readRightUltrasonicCm();
+  left2DistanceCm = readLeft2UltrasonicCm();
+  right2DistanceCm = readRight2UltrasonicCm();
 
-  // right print distances <= 50 cm
+  // prints <= 50 cm
   if (rightDistanceCm > 0 && rightDistanceCm <= 50) {
-    Serial.print("Right HC-SR04: ");
+    Serial.print("Right Front HC-SR04: ");
     Serial.print(rightDistanceCm);
     Serial.println(" cm");
   }
-
-  // left print distances <= 50 cm 
   if (leftDistanceCm > 0 && leftDistanceCm <= 50) {
-    Serial.print("Left HC-SR04: ");
+    Serial.print("Left Front HC-SR04: ");
     Serial.print(leftDistanceCm);
     Serial.println(" cm");
   }
+  if (left2DistanceCm > 0 && left2DistanceCm <= 50) {
+    Serial.print("Left Side HC-SR04: ");
+    Serial.print(left2DistanceCm);
+    Serial.println(" cm");
+  }
+  if (right2DistanceCm > 0 && right2DistanceCm <= 50) {
+    Serial.print("Right Side HC-SR04: ");
+    Serial.print(right2DistanceCm);
+    Serial.println(" cm");
+  }
 
-  // Check if any data has arrived from the ESP32
+  // If any data has arrived from the ESP32
   if (Serial1.available()) {
-    // Read the line until the newline character '\n'
     String incomingLine = Serial1.readStringUntil('\n');
-    
+
     parseAnchorDistance(incomingLine);
     Serial.print("Anchor1: "); Serial.println(dist.anchor1);
     Serial.print("Anchor2: "); Serial.println(dist.anchor2);
     Serial.print("Anchor3: "); Serial.println(dist.anchor3);
+
     calculateDirection();
+  } else {
+    // even without anchor updates, keep avoidance responsive
+    if (avoidSide != 0) {
+      calculateDirection();
+    }
   }
 
-  delay(5);
+  delay(20);
 }
