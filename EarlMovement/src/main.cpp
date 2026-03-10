@@ -321,14 +321,14 @@ void calculateDirection() {
     avoidSide = 1;
     avoidSensor = 1;   // front left triggered
     avoidPrinted = false;
-    moveAndTurnRight2(speed, 20);
+    moveAndTurnRight2(speed, 0);
     return;
   }
   if (left2DistanceCm > 0 && left2DistanceCm <= AVOID_CM) {
     avoidSide = 1;
     avoidSensor = 2;   // side left triggered
     avoidPrinted = false;
-    moveAndTurnRight2(speed, 20);
+    moveAndTurnRight2(speed, 0);
     return;
   }
 
@@ -337,14 +337,14 @@ void calculateDirection() {
     avoidSide = 2;
     avoidSensor = 1;   // front right triggered
     avoidPrinted = false;
-    moveAndTurnLeft2(speed, 20);
+    moveAndTurnLeft2(speed, 0);
     return;
   }
   if (right2DistanceCm > 0 && right2DistanceCm <= AVOID_CM) {
     avoidSide = 2;
     avoidSensor = 2;   // side right triggered
     avoidPrinted = false;
-    moveAndTurnLeft2(speed, 20);
+    moveAndTurnLeft2(speed, 0);
     return;
   }
 
@@ -459,5 +459,4 @@ void loop() {
     }
   }
 
-  delay(20);
 }
