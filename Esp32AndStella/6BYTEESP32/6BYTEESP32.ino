@@ -98,6 +98,7 @@ void loop() {
         if (connectToTag()) {
             Serial.println("Connected Successfully!");
         } else {
+            
             Serial.println("Connection Failed.");
         }
     }
@@ -105,6 +106,11 @@ void loop() {
     if (!connected) {
         // This ensures the ESP32 keeps looking whenever it is offline
         Serial.println("The connection is disconnected");
+                // ----- SEND TO MOTOR ARDUINO -----
+        Serial2.printf("Anchor 1 - Distance: %d mm\n", -1);
+        Serial2.printf("Anchor 2 - Distance: %d mm\n", -1);
+        Serial2.printf("Anchor 3 - Distance: %d mm\n", -1);
+
         BLEDevice::getScan()->start(2, false); 
     }
 

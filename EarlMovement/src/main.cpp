@@ -13,6 +13,8 @@ int R_ENA = 10;
 // Default speed (0–255)
 int speed = 255;
 
+int lastTimeReceived = 0;
+int timeout = 5000;
 // for distance reading
 String incoming = "";
 
@@ -420,30 +422,31 @@ void loop() {
   left2DistanceCm = readLeft2UltrasonicCm();
   right2DistanceCm = readRight2UltrasonicCm();
 
-  // prints <= 50 cm
-  if (rightDistanceCm > 0 && rightDistanceCm <= 50) {
-    Serial.print("Right Front HC-SR04: ");
-    Serial.print(rightDistanceCm);
-    Serial.println(" cm");
-  }
-  if (leftDistanceCm > 0 && leftDistanceCm <= 50) {
-    Serial.print("Left Front HC-SR04: ");
-    Serial.print(leftDistanceCm);
-    Serial.println(" cm");
-  }
-  if (left2DistanceCm > 0 && left2DistanceCm <= 50) {
-    Serial.print("Left Side HC-SR04: ");
-    Serial.print(left2DistanceCm);
-    Serial.println(" cm");
-  }
-  if (right2DistanceCm > 0 && right2DistanceCm <= 50) {
-    Serial.print("Right Side HC-SR04: ");
-    Serial.print(right2DistanceCm);
-    Serial.println(" cm");
-  }
+  // // prints <= 50 cm
+  // if (rightDistanceCm > 0 && rightDistanceCm <= 50) {
+  //   Serial.print("Right Front HC-SR04: ");
+  //   Serial.print(rightDistanceCm);
+  //   Serial.println(" cm");
+  // }
+  // if (leftDistanceCm > 0 && leftDistanceCm <= 50) {
+  //   Serial.print("Left Front HC-SR04: ");
+  //   Serial.print(leftDistanceCm);
+  //   Serial.println(" cm");
+  // }
+  // if (left2DistanceCm > 0 && left2DistanceCm <= 50) {
+  //   Serial.print("Left Side HC-SR04: ");
+  //   Serial.print(left2DistanceCm);
+  //   Serial.println(" cm");
+  // }
+  // if (right2DistanceCm > 0 && right2DistanceCm <= 50) {
+  //   Serial.print("Right Side HC-SR04: ");
+  //   Serial.print(right2DistanceCm);
+  //   Serial.println(" cm");
+  // }
 
   // If any data has arrived from the ESP32
   if (Serial1.available()) {
+    Serial.println("LAST TIME RECEIVED UPDATED: " + String(lastTimeReceived));
     String incomingLine = Serial1.readStringUntil('\n');
 
     parseAnchorDistance(incomingLine);
@@ -452,11 +455,16 @@ void loop() {
     Serial.print("Anchor3: "); Serial.println(dist.anchor3);
 
     calculateDirection();
-  } else {
+  }
+
+
+  else {
     // even without anchor updates, keep avoidance responsive
     if (avoidSide != 0) {
+      Serial.println("!Serialavailable - still avoiding based on last sensor readings");
       calculateDirection();
     }
   }
+
 
 }
