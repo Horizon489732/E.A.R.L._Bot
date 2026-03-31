@@ -219,7 +219,7 @@ void calculateDirection() {
         Serial.println(") -> turning RIGHT until clear");
         avoidPrinted = true;
       }
-      moveAndTurnRight2(speed, 20);
+      moveAndTurnRight2(speed, 0);
       return;
     } else {
       Serial.println("LEFT side clear -> stopping avoidance");
