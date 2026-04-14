@@ -1,4 +1,11 @@
 #include <Arduino.h>
+#include <FastLED.h>
+
+#define NUM_LEDS 7
+#define DATA_PIN 13
+#define BRIGHTNESS 255
+
+CRGB leds[NUM_LEDS];
 
 // Left Front Motor
 int L_IN1 = 6;
@@ -413,9 +420,14 @@ void setup() {
 
   stopMotors();
   Serial.println("Motors ready!");
+
+  FastLED.addLeds<NEOPIXEL, DATA_PIN>(leds, NUM_LEDS);
 }
 
 void loop() {
+  fill_solid(leds, NUM_LEDS, CRGB(255, 105, 180));
+  FastLED.show();
+    
   // Read all ultrasonic distances
   leftDistanceCm = readLeftUltrasonicCm();
   rightDistanceCm = readRightUltrasonicCm();
