@@ -111,8 +111,7 @@ void loop() {
         Serial2.printf("Anchor 2 - Distance: %d mm\n", -1);
         Serial2.printf("Anchor 3 - Distance: %d mm\n", -1);
 
-        BLEDevice::getScan()->start(2, false); 
+        BLEDevice::getScan()->start(1, false); 
     }
 
-    delay(500);
 }
