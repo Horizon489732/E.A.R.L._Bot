@@ -25,6 +25,10 @@ int timeout = 5000;
 // for distance reading
 String incoming = "";
 
+// for calculating connection timing
+unsigned long startTime;
+const int DATA_TIMEOUT_MS = 500;
+
 // ===================== HC-SR04 SETUP =====================
 // Current sensors (you already have these)
 const int L_TRIG_PIN = 11;   // LEFT FRONT
@@ -290,6 +294,16 @@ void calculateDirection() {
   }
 
   // =============================
+  // 4️⃣ Stop if too far
+  // =============================
+  if (dist.anchor1 > 1000 || dist.anchor2 > 1000) {
+    Serial.println("Stopping Motors - too far");
+    stopMotors();
+    return;
+  }
+
+
+  // =============================
   // 4️⃣ Wrong direction check
   // =============================
   if (dist.anchor3 > dist.anchor1 && dist.anchor3 > dist.anchor2) {
@@ -458,6 +472,8 @@ void loop() {
 
   // If any data has arrived from the ESP32
   if (Serial1.available()) {
+    startTime = millis();
+
     Serial.println("LAST TIME RECEIVED UPDATED: " + String(lastTimeReceived));
     String incomingLine = Serial1.readStringUntil('\n');
 
@@ -469,12 +485,13 @@ void loop() {
     calculateDirection();
   }
 
-
+  // if no data is recieved from esp32 for half a second, stop motors 
   else {
-    // even without anchor updates, keep avoidance responsive
-    if (avoidSide != 0) {
-      Serial.println("!Serialavailable - still avoiding based on last sensor readings");
-      calculateDirection();
+    unsigned long elapsed = millis() - startTime;
+
+    if (elapsed>DATA_TIMEOUT_MS) {
+      Serial.println("No Data Received");
+      stopMotors();
     }
   }
 
